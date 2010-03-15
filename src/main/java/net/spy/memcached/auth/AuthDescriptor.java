@@ -9,6 +9,8 @@ public class AuthDescriptor {
 
 	public final String[] mechs;
 	public final CallbackHandler cbh;
+        private int authAttempts;
+        private static final int ALLOWED_ATTEMPTS = 10;
 
 	/**
 	 * Request authentication using the given list of mechanisms and callback
@@ -20,6 +22,7 @@ public class AuthDescriptor {
 	public AuthDescriptor(String[] m, CallbackHandler h) {
 		mechs=m;
 		cbh=h;
+                authAttempts = 0;
 	}
 
 	/**
@@ -35,4 +38,14 @@ public class AuthDescriptor {
 		return new AuthDescriptor(new String[]{"CRAM-MD5", "PLAIN"},
 				new PlainCallbackHandler(u, p));
 	}
+
+        public boolean authThresholdReached() {
+            if (authAttempts >= ALLOWED_ATTEMPTS) {
+                return true;
+            }
+            else {
+                authAttempts++;
+                return false;
+            }
+        }
 }

@@ -1711,6 +1711,9 @@ public class MemcachedClient extends SpyThread
 
 	public void connectionEstablished(SocketAddress sa, int reconnectCount) {
 		if(authDescriptor != null) {
+                    if (authDescriptor.authThresholdReached()) {
+                        this.shutdown();
+                    }
 			new AuthThread(conn, opFact, authDescriptor, findNode(sa));
 		}
 	}
