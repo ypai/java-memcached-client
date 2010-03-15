@@ -45,6 +45,7 @@ import net.spy.memcached.ops.OperationState;
 import net.spy.memcached.ops.OperationStatus;
 import net.spy.memcached.ops.StatsOperation;
 import net.spy.memcached.ops.StoreType;
+import net.spy.memcached.protocol.binary.BinaryMemcachedNodeImpl;
 import net.spy.memcached.transcoders.TranscodeService;
 import net.spy.memcached.transcoders.Transcoder;
 
@@ -1730,7 +1731,11 @@ public class MemcachedClient extends SpyThread
 	}
 
 	public void connectionLost(SocketAddress sa) {
-		// Don't care.
+		MemcachedNode node = findNode(sa);
+                if (node instanceof BinaryMemcachedNodeImpl) {
+                    ((BinaryMemcachedNodeImpl)node).enableAuthLatch();
+                }
+                new AuthThread(conn, opFact, authDescriptor, findNode(sa));
 	}
 
 }
