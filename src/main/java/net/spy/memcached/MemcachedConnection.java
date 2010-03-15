@@ -31,6 +31,7 @@ import net.spy.memcached.compat.SpyObject;
 import net.spy.memcached.ops.KeyedOperation;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationState;
+import net.spy.memcached.protocol.binary.BinaryMemcachedNodeImpl;
 
 /**
  * Connection to a cluster of memcached servers.
@@ -501,6 +502,13 @@ public final class MemcachedConnection extends SpyObject {
 				if(!seen.containsKey(qa)) {
 					seen.put(qa, Boolean.TRUE);
 					getLogger().info("Reconnecting %s", qa);
+                                        if (qa instanceof BinaryMemcachedNodeImpl) {
+
+                                            if (((BinaryMemcachedNodeImpl)qa).shouldAuth()) {
+                                                ((BinaryMemcachedNodeImpl)qa).enableAuthLatch();
+                                                cancelOperations(qa.destroyInputQueue());
+                                            }
+                                        }
 					final SocketChannel ch=SocketChannel.open();
 					ch.configureBlocking(false);
 					int ops=0;
