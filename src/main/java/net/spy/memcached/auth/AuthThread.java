@@ -12,6 +12,7 @@ import net.spy.memcached.compat.SpyThread;
 import net.spy.memcached.ops.Operation;
 import net.spy.memcached.ops.OperationCallback;
 import net.spy.memcached.ops.OperationStatus;
+import net.spy.memcached.protocol.binary.BinaryMemcachedNodeImpl;
 
 public class AuthThread extends SpyThread {
 
@@ -52,6 +53,10 @@ public class AuthThread extends SpyThread {
 				}
 
 				public void complete() {
+                                    // Only binary memcached nodes may be doing auth
+                                    if (node instanceof BinaryMemcachedNodeImpl) {
+                                        ((BinaryMemcachedNodeImpl)node).authComplete();
+                                    }
 					latch.countDown();
 				}
 			};

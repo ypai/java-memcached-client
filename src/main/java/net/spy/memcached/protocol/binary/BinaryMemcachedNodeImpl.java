@@ -3,6 +3,9 @@ package net.spy.memcached.protocol.binary;
 import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import net.spy.memcached.ops.CASOperation;
 import net.spy.memcached.ops.GetOperation;
@@ -19,11 +22,19 @@ public class BinaryMemcachedNodeImpl extends TCPMemcachedNodeImpl {
 
 	private final int MAX_SET_OPTIMIZATION_COUNT = 65535;
 	private final int MAX_SET_OPTIMIZATION_BYTES = 2 * 1024 * 1024;
+        private CountDownLatch authLatch;
 
 	public BinaryMemcachedNodeImpl(SocketAddress sa, SocketChannel c,
 			int bufSize, BlockingQueue<Operation> rq,
-			BlockingQueue<Operation> wq, BlockingQueue<Operation> iq, Long opQueueMaxBlockTimeNs) {
+			BlockingQueue<Operation> wq, BlockingQueue<Operation> iq, 
+                        Long opQueueMaxBlockTimeNs, Boolean waitForAuth) {
 		super(sa, c, bufSize, rq, wq, iq, opQueueMaxBlockTimeNs);
+                if (waitForAuth == true) {
+                    authLatch = new CountDownLatch(1);
+                } else {
+                    authLatch = new CountDownLatch(0);
+                }
+
 	}
 
 	@Override
@@ -35,6 +46,23 @@ public class BinaryMemcachedNodeImpl extends TCPMemcachedNodeImpl {
 			optimizeSets();
 		}
 	}
+
+        @Override
+        public void addOp(Operation op) {
+            try {
+                authLatch.await();
+                super.addOp(op);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Interrupted while waiting to add "
+		                                 + op);
+            }
+
+        }
+
+        public void authComplete() {
+            this.authLatch.countDown();
+        }
 
 	private void optimizeGets() {
 		// make sure there are at least two get operations in a row before

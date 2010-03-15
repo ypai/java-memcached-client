@@ -44,7 +44,9 @@ public class BinaryConnectionFactory extends DefaultConnectionFactory {
 			createReadOperationQueue(),
 			createWriteOperationQueue(),
 			createOperationQueue(),
-			getOpQueueMaxBlockTime());
+			getOpQueueMaxBlockTime(),
+                        new Boolean(false) /* not doing auth */);
+                        /* if you're looking for auth, see ConnectionFactoryBuilder */
 	}
 
 	@Override

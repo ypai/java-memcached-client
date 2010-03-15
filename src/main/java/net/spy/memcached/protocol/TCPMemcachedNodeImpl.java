@@ -241,7 +241,7 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject
 	/* (non-Javadoc)
 	 * @see net.spy.memcached.MemcachedNode#addOp(net.spy.memcached.ops.Operation)
 	 */
-	public final void addOp(Operation op) {
+	public void addOp(Operation op) {
 		try {
 			if(!inputQueue.offer(op, opQueueMaxBlockTime,
 					TimeUnit.MILLISECONDS)) {
