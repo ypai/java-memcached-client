@@ -21,7 +21,7 @@ public class BinaryMemcachedNodeImpl extends TCPMemcachedNodeImpl {
 	private final int MAX_SET_OPTIMIZATION_COUNT = 65535;
 	private final int MAX_SET_OPTIMIZATION_BYTES = 2 * 1024 * 1024;
         private CountDownLatch authLatch;
-        private Boolean waitForAuth;
+        private final Boolean waitForAuth;
 
 	public BinaryMemcachedNodeImpl(SocketAddress sa, SocketChannel c,
 			int bufSize, BlockingQueue<Operation> rq,
@@ -68,6 +68,10 @@ public class BinaryMemcachedNodeImpl extends TCPMemcachedNodeImpl {
             if (waitForAuth) {
                 this.authLatch = new CountDownLatch(1);
             }
+        }
+
+        public boolean shouldAuth() {
+            return this.waitForAuth;
         }
 
 	private void optimizeGets() {
