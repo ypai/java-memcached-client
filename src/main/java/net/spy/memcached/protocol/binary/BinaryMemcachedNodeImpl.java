@@ -4,8 +4,6 @@ import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import net.spy.memcached.ops.CASOperation;
 import net.spy.memcached.ops.GetOperation;
@@ -23,13 +21,15 @@ public class BinaryMemcachedNodeImpl extends TCPMemcachedNodeImpl {
 	private final int MAX_SET_OPTIMIZATION_COUNT = 65535;
 	private final int MAX_SET_OPTIMIZATION_BYTES = 2 * 1024 * 1024;
         private CountDownLatch authLatch;
+        private Boolean waitForAuth;
 
 	public BinaryMemcachedNodeImpl(SocketAddress sa, SocketChannel c,
 			int bufSize, BlockingQueue<Operation> rq,
 			BlockingQueue<Operation> wq, BlockingQueue<Operation> iq, 
                         Long opQueueMaxBlockTimeNs, Boolean waitForAuth) {
 		super(sa, c, bufSize, rq, wq, iq, opQueueMaxBlockTimeNs);
-                if (waitForAuth == true) {
+                this.waitForAuth = new Boolean(waitForAuth);
+                if (this.waitForAuth == true) {
                     authLatch = new CountDownLatch(1);
                 } else {
                     authLatch = new CountDownLatch(0);
@@ -62,6 +62,12 @@ public class BinaryMemcachedNodeImpl extends TCPMemcachedNodeImpl {
 
         public void authComplete() {
             this.authLatch.countDown();
+        }
+
+        public void enableAuthLatch() {
+            if (waitForAuth) {
+                this.authLatch = new CountDownLatch(1);
+            }
         }
 
 	private void optimizeGets() {
