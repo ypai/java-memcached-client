@@ -40,7 +40,7 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject
 	public TCPMemcachedNodeImpl(SocketAddress sa, SocketChannel c,
 			int bufSize, BlockingQueue<Operation> rq,
 			BlockingQueue<Operation> wq, BlockingQueue<Operation> iq,
-			long opQueueMaxBlockTime) {
+			long opQueueMaxBlockTime, boolean waitForAuth) {
 		super();
 		assert sa != null : "No SocketAddress";
 		assert c != null : "No SocketChannel";
@@ -57,6 +57,9 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject
 		writeQ=wq;
 		inputQueue=iq;
 		this.opQueueMaxBlockTime = opQueueMaxBlockTime;
+		if (waitForAuth) {
+		    // do something useful here to ensure auth happens first
+		}
 	}
 
 	/* (non-Javadoc)
