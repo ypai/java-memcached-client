@@ -8,6 +8,7 @@ import java.nio.channels.SocketChannel;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import net.spy.memcached.MemcachedNode;
@@ -36,6 +37,9 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject
 	private int toWrite=0;
 	protected Operation optimizedOp=null;
 	private volatile SelectionKey sk=null;
+	private boolean shouldAuth=false;
+	private CountDownLatch authLatch;
+	private ArrayList<Operation> reconnectBlocked;
 
 	public TCPMemcachedNodeImpl(SocketAddress sa, SocketChannel c,
 			int bufSize, BlockingQueue<Operation> rq,
@@ -57,9 +61,8 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject
 		writeQ=wq;
 		inputQueue=iq;
 		this.opQueueMaxBlockTime = opQueueMaxBlockTime;
-		if (waitForAuth) {
-		    // do something useful here to ensure auth happens first
-		}
+		shouldAuth = waitForAuth;
+		setupForAuth();
 	}
 
 	/* (non-Javadoc)
@@ -246,6 +249,7 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject
 	 */
 	public final void addOp(Operation op) {
 		try {
+			authLatch.await();
 			if(!inputQueue.offer(op, opQueueMaxBlockTime,
 					TimeUnit.MILLISECONDS)) {
 				throw new IllegalStateException("Timed out waiting to add "
@@ -431,4 +435,27 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject
 			getLogger().debug("Selection key is not valid.");
 		}
 	}
+
+	public final void authComplete() {
+		if (reconnectBlocked != null && reconnectBlocked.size() > 0 ) {
+		    inputQueue.addAll(reconnectBlocked);
+		}
+		authLatch.countDown();
+	}
+
+	public final void setupForAuth() {
+	    if (shouldAuth) {
+		    authLatch = new CountDownLatch(1);
+		    setupResend();
+		    if (inputQueue.size() > 0) {
+			reconnectBlocked = new ArrayList<Operation>(
+				inputQueue.size() + 1);
+			inputQueue.drainTo(reconnectBlocked);
+		    }
+
+		} else {
+		    authLatch = new CountDownLatch(0);
+		}
+	}
+
 }

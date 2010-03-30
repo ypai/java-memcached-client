@@ -336,6 +336,7 @@ public final class MemcachedConnection extends SpyObject {
 				}
 			}
 		} catch(ClosedChannelException e) {
+			// Note, not all channel closes end up here
 			if(!shutDown) {
 				getLogger().info("Closed channel and not shutting down.  "
 					+ "Queueing reconnect on %s", qa, e);
@@ -348,9 +349,13 @@ public final class MemcachedConnection extends SpyObject {
 					qa, e);
 			queueReconnect(qa);
 		} catch(Exception e) {
-			// Various errors occur on Linux that wind up here.  However, any
-			// particular error processing an item should simply cause us to
-			// reconnect to the server.
+			// Any particular error processing an item should simply
+			// cause us to reconnect to the server.
+			//
+			// One cause is just network oddness or servers
+			// restarting, which lead here with IOException
+
+			qa.setupForAuth(); // noop if !shouldAuth
 			getLogger().info("Reconnecting due to exception on %s", qa, e);
 			lostConnection(qa);
 		}
@@ -359,6 +364,8 @@ public final class MemcachedConnection extends SpyObject {
 
 	private void handleWrites(SelectionKey sk, MemcachedNode qa)
 		throws IOException {
+		// this is where I can check for auth and do some stuff if not
+		// auth'd
 		qa.fillWriteBuffer(shouldOptimize);
 		boolean canWriteMore=qa.getBytesRemainingToWrite() > 0;
 		while(canWriteMore) {
@@ -373,7 +380,7 @@ public final class MemcachedConnection extends SpyObject {
 		Operation currentOp = qa.getCurrentReadOp();
 		ByteBuffer rbuf=qa.getRbuf();
 		final SocketChannel channel = qa.getChannel();
-		int read=channel.read(rbuf);
+		    int read=channel.read(rbuf);
 		if (read < 0) {
 		    // our model is to keep the connection alive for future ops
 		    // so we'll queue a reconnect if disconnected via an IOException
@@ -400,7 +407,7 @@ public final class MemcachedConnection extends SpyObject {
 			rbuf.clear();
 			read=channel.read(rbuf);
 		}
-	}
+		    }
 
 	// Make a debug string out of the given buffer's values
 	static String dbgBuffer(ByteBuffer b, int size) {
