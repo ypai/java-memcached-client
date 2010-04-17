@@ -5,3 +5,4 @@ reports/
 junit*
 *.iml
 *~
+src/test/manual/net/spy/memcached/test/*.class
