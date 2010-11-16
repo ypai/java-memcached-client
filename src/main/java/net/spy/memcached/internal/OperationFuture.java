@@ -57,6 +57,7 @@ public class OperationFuture<T> implements Future<T> {
 	public T get(long duration, TimeUnit units)
 		throws InterruptedException, TimeoutException, ExecutionException {
 		if(!latch.await(duration, units)) {
+                        op.cancel();
 			// whenever timeout occurs, continuous timeout counter will increase by 1.
 			MemcachedConnection.opTimedOut(op);
 			throw new CheckedOperationTimeoutException(
