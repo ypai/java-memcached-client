@@ -154,7 +154,7 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject
 		if(toWrite == 0 && readQ.remainingCapacity() > 0) {
 			getWbuf().clear();
 			Operation o=getCurrentWriteOp();
-                        if (o.isCancelled()) {
+                        if (o.isCancelled()  || o.isTimedOut() ) {
                             getLogger().debug("Not writing cancelled op.");
                             return;
                         }
