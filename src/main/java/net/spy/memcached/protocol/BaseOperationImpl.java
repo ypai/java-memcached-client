@@ -30,9 +30,11 @@ public abstract class BaseOperationImpl extends SpyObject implements Operation {
 	protected OperationCallback callback = null;
 	private volatile MemcachedNode handlingNode = null;
         private boolean timedout;
+	private long creationTime;
 
 	public BaseOperationImpl() {
 		super();
+		creationTime = System.nanoTime();
 	}
 
 	/**
@@ -153,5 +155,12 @@ public abstract class BaseOperationImpl extends SpyObject implements Operation {
         @Override
         public boolean isTimedOut() {
             return timedout;
+        }
+
+	@Override
+	public boolean isTimedOut(long ttl) {
+		long elapsed = System.nanoTime();
+		if (elapsed - creationTime > ttl);
+		return timedout;
         }
 }

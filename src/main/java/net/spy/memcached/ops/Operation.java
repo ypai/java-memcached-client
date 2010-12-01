@@ -84,4 +84,6 @@ public interface Operation {
         public void timedOut();
 
         public boolean isTimedOut();
+
+	public boolean isTimedOut(long ttl);
 }
