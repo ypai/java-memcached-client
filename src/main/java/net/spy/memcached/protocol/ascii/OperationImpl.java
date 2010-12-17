@@ -25,8 +25,7 @@ abstract class OperationImpl extends BaseOperationImpl implements Operation {
 	private final ByteArrayOutputStream byteBuffer=new ByteArrayOutputStream();
 	OperationReadType readType=OperationReadType.LINE;
 	boolean foundCr=false;
-        private boolean timedout;
-
+	
 	protected OperationImpl() {
 		super();
 	}
@@ -142,13 +141,4 @@ abstract class OperationImpl extends BaseOperationImpl implements Operation {
 	 */
 	public abstract void handleLine(String line);
 
-        @Override
-        public void timedOut() {
-            timedout = true;
-        }
-
-        @Override
-        public boolean isTimedOut() {
-            return timedout;
-        }
 }

@@ -580,7 +580,7 @@ public abstract class ProtocolBaseCase extends ClientBaseCase {
 		} catch(OperationTimeoutException e) {
 			System.out.println("Got a timeout.");
 		}
-		if(value.equals(client.asyncGet(key).get(1, TimeUnit.SECONDS))) {
+		if(value.equals(client.asyncGet(key).get(10, TimeUnit.SECONDS))) {
 			System.out.println("Got the right value.");
 		} else {
 			throw new Exception("Didn't get the expected value.");

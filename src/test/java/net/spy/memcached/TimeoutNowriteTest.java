@@ -25,7 +25,7 @@ public class TimeoutNowriteTest extends ClientBaseCase {
 		client=new MemcachedClient(new DefaultConnectionFactory() {
 			@Override
 			public long getOperationTimeout() {
-				return 1;
+				return 1000; // 1 sec
 			}
 			@Override
 			public FailureMode getFailureMode() {
@@ -61,13 +61,29 @@ public class TimeoutNowriteTest extends ClientBaseCase {
 			@Override
 			public void initialize() {
 				setBuffer(ByteBuffer.wrap("garbage\r\n".getBytes()));
-			}};
+			}
+
+			};
 	try {
-	    Thread.sleep(2600);
+	    Thread.sleep(1100);
 	} catch (InterruptedException ex) {
-	    // don't care
+	    System.err.println("Interrupted when sleeping for timeout nowrite");
 	}
-		client.addOp("x", op);
+
+	client.addOp("x", op);
+	System.err.println("Operation attempted:");
+	System.err.println(op);
+	System.err.println("Trying to get:");
+	try {
+		String retVal = new String((byte[])client.get("x"));
+		System.err.println(retVal);
+	}
+	catch (net.spy.memcached.OperationTimeoutException ex) {
+		System.err.println("Timed out successfully: " + ex.getMessage());
+	}
+
+	System.err.println("Op timed out is " + op.isTimedOut());
+	assert(op.isTimedOut() == true);
 	}
 
 }
