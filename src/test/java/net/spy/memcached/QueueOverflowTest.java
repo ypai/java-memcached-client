@@ -84,6 +84,7 @@ public class QueueOverflowTest extends ClientBaseCase {
 			// OK, at least we got one back.
 		}
 		Thread.sleep(500);
+		client.waitForQueues(10, TimeUnit.SECONDS);
 		assertTrue("Was not able to set a key after failure.",
 				client.set("kx", 0, "woo").get(10, TimeUnit.SECONDS));
 	}

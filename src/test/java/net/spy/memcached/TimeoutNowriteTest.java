@@ -75,8 +75,9 @@ public class TimeoutNowriteTest extends ClientBaseCase {
 	System.err.println(op);
 	System.err.println("Trying to get:");
 	try {
-		String retVal = new String((byte[])client.get("x"));
-		System.err.println(retVal);
+		byte[] retVal = (byte[])client.get("x");
+		String retValString = new String();
+		System.err.println(retValString);
 	}
 	catch (net.spy.memcached.OperationTimeoutException ex) {
 		System.err.println("Timed out successfully: " + ex.getMessage());

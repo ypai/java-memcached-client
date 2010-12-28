@@ -149,6 +149,7 @@ public abstract class BaseOperationImpl extends SpyObject implements Operation {
 
         @Override
         public void timedOut() {
+	    this.transitionState(OperationState.TIMEDOUT);
             timedout = true;
         }
 
@@ -161,8 +162,10 @@ public abstract class BaseOperationImpl extends SpyObject implements Operation {
 	public boolean isTimedOut(long ttl) {
 		long elapsed = System.nanoTime();
 		long ttlNanos = ttl * 1000 * 1000; /* ttl supplied is millis */
-		if (elapsed - creationTime > ttlNanos)
+		if (elapsed - creationTime > ttlNanos) {
+			this.transitionState(OperationState.TIMEDOUT);
 			timedout = true;
+		}
 		return timedout;
         }
 }

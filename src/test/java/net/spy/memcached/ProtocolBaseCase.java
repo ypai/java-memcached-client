@@ -567,7 +567,12 @@ public abstract class ProtocolBaseCase extends ClientBaseCase {
 		initClient(new DefaultConnectionFactory() {
 			@Override
 			public long getOperationTimeout() {
-				return 20;
+				return 2;
+			}
+
+			@Override
+			public int getTimeoutExceptionThreshold() {
+				return 1000000;
 			}
 		});
 
@@ -580,11 +585,32 @@ public abstract class ProtocolBaseCase extends ClientBaseCase {
 		} catch(OperationTimeoutException e) {
 			System.out.println("Got a timeout.");
 		}
-		if(value.equals(client.asyncGet(key).get(10, TimeUnit.SECONDS))) {
-			System.out.println("Got the right value.");
+	    try {
+		if (value.equals(client.asyncGet(key).get(2, TimeUnit.MINUTES))) {
+		    System.out.println("Got the right value.");
 		} else {
-			throw new Exception("Didn't get the expected value.");
+		    throw new Exception("Didn't get the expected value.");
 		}
+	    } catch (java.util.concurrent.TimeoutException timeoutException) {
+		    debugNodeInfo(client.getNodeLocator().getAll());
+		    throw new Exception("Unexpected timeout after 30 seconds waiting");
+	    }
+	}
+
+	private void debugNodeInfo(Collection<MemcachedNode> nodes) {
+	    System.err.println("Debug nodes:");
+	    for (MemcachedNode node : nodes) {
+		    System.err.println(node);
+		    System.err.println("Is active? " + node.isActive());
+		    System.err.println("Has read operation? " + node.hasReadOp() + " Has write operation? " + node.hasWriteOp());
+		try {
+		    System.err.println("Has timed out this many times: " + node.getContinuousTimeout());
+		    System.err.println("Write op: " + node.getCurrentWriteOp());
+		    System.err.println("Read op: " + node.getCurrentReadOp());
+		} catch (UnsupportedOperationException e) {
+		    System.err.println("Node does not support full interface, likely read only.");
+		}
+	    }
 	}
 
 	public void xtestGracefulShutdownTooSlow() throws Exception {

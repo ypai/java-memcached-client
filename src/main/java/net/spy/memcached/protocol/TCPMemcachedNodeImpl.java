@@ -161,9 +161,9 @@ public abstract class TCPMemcachedNodeImpl extends SpyObject
                             return;
                         }
 			if (o != null && o.isTimedOut(defaultOpTimeout)) {
-			    System.err.println("Not writing timed out op.");
                             getLogger().debug("Not writing timed out op.");
-			    o.writeComplete();
+			    Operation timedOutOp = removeCurrentWriteOp();
+			    assert o == timedOutOp;
                             return;
 			}
 			while(o != null && toWrite < getWbuf().capacity()) {
