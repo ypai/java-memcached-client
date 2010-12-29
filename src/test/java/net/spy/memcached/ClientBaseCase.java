@@ -2,6 +2,10 @@ package net.spy.memcached;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import junit.framework.TestCase;
 
@@ -10,6 +14,26 @@ public abstract class ClientBaseCase extends TestCase {
 	protected MemcachedClient client = null;
 
 	protected void initClient() throws Exception {
+
+	    	Logger.getLogger("net.spy.memcached").setLevel(Level.FINEST);
+
+	//get the top Logger, create it if it doesn't exist, set to FINEST
+	Logger topLogger = java.util.logging.Logger.getLogger("");
+
+	Handler consoleHandler = null;
+	for (Handler handler : topLogger.getHandlers()) {
+	    if (handler instanceof ConsoleHandler) {
+		consoleHandler = handler;
+		break;
+	    }
+	}
+
+	if (consoleHandler == null) {
+	    consoleHandler = new ConsoleHandler();
+	    topLogger.addHandler(consoleHandler);
+	}
+	consoleHandler.setLevel(java.util.logging.Level.FINEST);
+
 		initClient(new DefaultConnectionFactory() {
 			@Override
 			public long getOperationTimeout() {

@@ -576,25 +576,38 @@ public abstract class ProtocolBaseCase extends ClientBaseCase {
 			}
 		});
 
-		client.set(key, 0, value);
+		Thread.sleep(50); // allow connections to be established
+
+		int j = 0;
+		boolean set = false;
+		do {
+			set = client.set(key, 0, value).get();
+			j++;
+		} while (set != true && j < 10);
+		assert set = true;
+
+		int i = 0;
 		try {
-			for(int i=0; i<1000000; i++) {
+			for(i = 0; i < 1000000; i++) {
 				client.get(key);
 			}
 			throw new Exception("Didn't get a timeout.");
 		} catch(OperationTimeoutException e) {
-			System.out.println("Got a timeout.");
+			System.out.println("Got a timeout at iteration " + i + ".");
 		}
-	    try {
-		if (value.equals(client.asyncGet(key).get(2, TimeUnit.MINUTES))) {
-		    System.out.println("Got the right value.");
+		Thread.sleep(50); // let whatever caused the timeout to pass
+		try {
+			client.asyncGet("boundaryBefore").get(30, TimeUnit.SECONDS);
+			if (value.equals(client.asyncGet(key).get(30, TimeUnit.SECONDS))) {
+			System.out.println("Got the right value.");
 		} else {
-		    throw new Exception("Didn't get the expected value.");
+			throw new Exception("Didn't get the expected value.");
 		}
-	    } catch (java.util.concurrent.TimeoutException timeoutException) {
-		    debugNodeInfo(client.getNodeLocator().getAll());
-		    throw new Exception("Unexpected timeout after 30 seconds waiting");
-	    }
+		} catch (java.util.concurrent.TimeoutException timeoutException) {
+		        debugNodeInfo(client.getNodeLocator().getAll());
+			client.asyncGet("boundaryAfter").get(30, TimeUnit.SECONDS);
+			throw new Exception("Unexpected timeout after 30 seconds waiting", timeoutException);
+		}
 	}
 
 	private void debugNodeInfo(Collection<MemcachedNode> nodes) {
