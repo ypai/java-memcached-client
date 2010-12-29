@@ -49,8 +49,8 @@ end
 desc "Java memcached client"
 define "memcached" do
 
-  test.options[:java_args] = "-ea", -Dnet.spy.log.LoggerImpl=net.spy.memcached.compat.log.SunLogger"#, "-Xmx512m", "-Xdebug", "-Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n"
-  test.include "net.spy.memcached.AsciiIPV6ClientTest"
+  test.options[:java_args] = "-ea", "-Dnet.spy.log.LoggerImpl=net.spy.memcached.compat.log.SunLogger"#, "-Xmx512m", "-Xdebug", "-Xrunjdwp:transport=dt_socket,address=8000,server=y,suspend=n"
+  test.include "*Test"
   TREE_VER=tree_version
   puts "Tree version is #{TREE_VER}"
 
