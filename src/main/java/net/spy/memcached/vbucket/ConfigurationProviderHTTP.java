@@ -221,16 +221,14 @@ public class ConfigurationProviderHTTP implements ConfigurationProvider {
         if (!resource.isAbsolute() && base != null) {
             resource = base.resolve(resource);
         }
-        if (restUsr != null) {
-            Authenticator.setDefault(new PoolAuthenticator(this.restUsr, this.restPwd));
-        } else {
-            Authenticator.setDefault(null);
-        }
         URL specURL = resource.toURL();
         URLConnection connection = specURL.openConnection();
         connection.setRequestProperty("Accept", "application/json");
         connection.setRequestProperty("user-agent", "spymemcached vbucket client");
         connection.setRequestProperty("X-memcachekv-Store-Client-Specification-Version", CLIENT_SPEC_VER);
+	if (restUsr != null) {
+	    connection.setRequestProperty("Authorization", buildAuthHeader(restUsr, restPwd));
+	}
 
         return connection;
 
@@ -264,6 +262,29 @@ public class ConfigurationProviderHTTP implements ConfigurationProvider {
         }
         reader.close();
         return buffer.toString();
+    }
+
+    /**
+     * Oddly, lots of things that do HTTP seem to not know how to do this and
+     * Authenticator caches for the process.  Since we only need Basic at the
+     * moment simply, add the header.
+     *
+     * @return a value for an HTTP Basic Auth Header
+     */
+    protected static String buildAuthHeader(String username, String password) {
+        // apparently netty isn't familiar with HTTP Basic Auth
+        StringBuilder clearText = new StringBuilder(username);
+        clearText.append(':');
+        if (password != null) {
+            clearText.append(password);
+        }
+        // and apache base64 codec has extra \n\l we have to strip off
+        String encodedText = org.apache.commons.codec.binary.Base64.encodeBase64String(clearText.toString().getBytes());
+        char[] encodedWoNewline = new char[encodedText.length() - 2];
+        encodedText.getChars(0, encodedText.length() - 2, encodedWoNewline, 0);
+        String authVal = "Basic " + new String(encodedWoNewline);
+
+        return authVal;
     }
 
 }
